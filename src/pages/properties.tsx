@@ -90,19 +90,9 @@ export default function Properties() {
         fetchProperties();
       }
     } else {
-      // Generate custom property ID: PROP + 4-char alphanumeric
-      function generatePropertyId() {
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-        let result = '';
-        for (let i = 0; i < 4; i++) {
-          result += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
-        return 'PROP' + result;
-      }
-      const propertyId = generatePropertyId();
+      // Insertar propiedad dejando que la base de datos genere el UUID automáticamente
       const { data, error } = await supabase.from("properties").insert([
         {
-          id: propertyId,
           ...form,
           owner_id: user.id,
           square_footage: Number(form.square_footage),
