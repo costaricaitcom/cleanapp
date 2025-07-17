@@ -9,8 +9,25 @@
 .rdrDayToday .rdrDayNumber span {
   color: #60a5fa !important;
 }
-.rdrDaySelected, .rdrDayInRange, .rdrDayStartPreview, .rdrDayEndPreview {
+.rdrDaySelected, .rdrDayInRange {
   background: #2563eb !important;
+  color: #fff !important;
+}
+.rdrDayStartPreview, .rdrDayEndPreview {
+  background: #60a5fa !important;
+  color: #fff !important;
+  border-radius: 50% !important;
+  border: 2px solid #fff !important;
+}
+.rdrDayStartEdge, .rdrDayEndEdge {
+  background: #60a5fa !important;
+  color: #fff !important;
+  border-radius: 50% !important;
+  border: 2px solid #fff !important;
+  z-index: 2;
+}
+.rdrDayHovered:not(.rdrDaySelected):not(.rdrDayInRange) {
+  background: #60a5fa !important;
   color: #fff !important;
 }
 .rdrDayDisabled, .rdrDayDisabled span {

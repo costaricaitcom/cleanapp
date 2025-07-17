@@ -147,7 +147,7 @@ export default function Tasks() {
   }
 
   useEffect(() => {
-    if (role === "owner") {
+    if (role === "owner" || role === "admin" || role === "cleaning_manager") {
       console.log("cleaningManagers:", cleaningManagers);
     }
   }, [role, cleaningManagers]);
@@ -222,6 +222,7 @@ export default function Tasks() {
                 required
               >
                 <option value="">Selecciona un Jefe de Limpieza</option>
+                {cleaningManagers.length === 0 && <option disabled value="">No hay jefes de limpieza disponibles</option>}
                 {cleaningManagers.map(m => (
                   <option key={m.id} value={m.id}>
                     {m.name ? `${m.name} (${m.email})` : m.email}
