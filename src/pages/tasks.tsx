@@ -5,7 +5,6 @@ import { supabase } from "../lib/supabaseClient";
 import { DateRange } from 'react-date-range';
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
-import '../styles/date-range-dark.css'; // Asegúrate de crear este archivo para los estilos custom
 import { withRetry } from '../utils/withRetry';
 
 export default function Tasks() {
