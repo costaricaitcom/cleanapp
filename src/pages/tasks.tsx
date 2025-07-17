@@ -5,6 +5,7 @@ import { supabase } from "../lib/supabaseClient";
 import { DateRange } from 'react-date-range';
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
+import '../styles/date-range-dark.css'; // Asegúrate de crear este archivo para los estilos custom
 import { withRetry } from '../utils/withRetry';
 
 export default function Tasks() {
@@ -169,9 +170,6 @@ export default function Tasks() {
               <option value="Limpieza">Limpieza</option>
             </select>
           </div>
-          <div className="flex flex-col w-full sm:col-span-2 lg:col-span-3">
-            <input className="input input-bordered p-2 rounded-2xl border w-full" placeholder="Notas" value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} />
-          </div>
           <div className="flex flex-col w-full sm:col-span-2 lg:col-span-3 items-center gap-4">
             <label className="text-xs text-white mb-1 text-center">Selecciona el rango de fechas</label>
             <DateRange
@@ -189,6 +187,14 @@ export default function Tasks() {
               minDate={new Date()}
               rangeColors={["#2563eb"]}
               locale={undefined}
+              className="date-range-dark"
+            />
+            <textarea
+              className="input input-bordered p-2 rounded-2xl border w-full mt-4 bg-[#222] text-white"
+              placeholder="Notas"
+              value={form.notes}
+              onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
+              rows={3}
             />
           </div>
           {/* Dropdowns for assignee, button, and error message remain as before, but centered and full width */}
@@ -208,14 +214,15 @@ export default function Tasks() {
             </div>
           )}
           {role === "owner" && (
-            <div className="flex flex-col w-full sm:col-span-2 lg:col-span-3">
+            <div className="flex flex-col w-full">
+              <label className="text-xs text-white mb-1 text-center">Asignar a Jefe de Limpieza</label>
               <select
-                className="input input-bordered p-2 rounded-2xl border w-full"
-                value={form.assigned_to && form.assigned_to[0] ? form.assigned_to[0] : ""}
+                className="input input-bordered p-2 rounded-2xl border w-full bg-[#222] text-white"
+                value={form.assigned_to[0] || ""}
                 onChange={e => setForm(f => ({ ...f, assigned_to: [e.target.value] }))}
                 required
               >
-                <option value="">Asignar a Jefe de Limpieza</option>
+                <option value="">Selecciona un Jefe de Limpieza</option>
                 {cleaningManagers.map(m => (
                   <option key={m.id} value={m.id}>
                     {m.name ? `${m.name} (${m.email})` : m.email}

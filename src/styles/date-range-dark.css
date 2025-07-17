@@ -1,0 +1,28 @@
+.rdrCalendarWrapper, .rdrDateDisplayWrapper, .rdrMonthAndYearWrapper, .rdrMonths, .rdrMonth, .rdrWeekDays, .rdrDays, .rdrDay, .rdrDayNumber, .rdrDateDisplayItem {
+  background: #18181b !important;
+  color: #fff !important;
+  border-color: #333 !important;
+}
+.rdrDayNumber span {
+  color: #fff !important;
+}
+.rdrDayToday .rdrDayNumber span {
+  color: #60a5fa !important;
+}
+.rdrDaySelected, .rdrDayInRange, .rdrDayStartPreview, .rdrDayEndPreview {
+  background: #2563eb !important;
+  color: #fff !important;
+}
+.rdrDayDisabled, .rdrDayDisabled span {
+  color: #555 !important;
+  background: #222 !important;
+}
+.rdrMonthAndYearPickers select {
+  background: #222 !important;
+  color: #fff !important;
+}
+.rdrDateDisplayItem input {
+  background: #222 !important;
+  color: #fff !important;
+  border: 1px solid #333 !important;
+} 
