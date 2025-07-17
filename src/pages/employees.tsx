@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useRouter } from "next/router";
 import { supabase } from "../lib/supabaseClient";
+import { withRetry } from '../utils/withRetry';
 
 export default function Employees() {
   const auth = useAuth();
@@ -36,9 +37,18 @@ export default function Employees() {
 
   async function fetchEmployees() {
     setLoadingData(true);
-    const { data, error } = await supabase.from("users").select("*").neq("role", "owner");
-    if (!error) setEmployees(data || []);
-    setLoadingData(false);
+    setError("");
+    try {
+      await withRetry(async () => {
+        const { data, error } = await supabase.from("users").select("*").neq("role", "owner");
+        if (error) throw new Error(error.message);
+        setEmployees(data || []);
+      }, 10000, 3);
+    } catch (err) {
+      setError("Error al cargar empleados: " + (err.message || err));
+    } finally {
+      setLoadingData(false);
+    }
   }
 
   async function handleAddOrUpdate(e: React.FormEvent) {
@@ -46,47 +56,51 @@ export default function Employees() {
     setError("");
     setSuccessMsg("");
     if (editingId) {
-      // Update employee (only name and role)
-      const { error } = await supabase.from("users").update({
-        name: form.name,
-        role: form.role
-      }).eq("id", editingId);
-      if (error) setError(error.message);
-      else {
+      try {
+        await withRetry(async () => {
+          const { error } = await supabase.from("users").update({
+            name: form.name,
+            role: form.role
+          }).eq("id", editingId);
+          if (error) throw new Error(error.message);
+        }, 10000, 3);
         setSuccessMsg("Empleado actualizado exitosamente.");
         setEditingId(null);
         setForm({ email: "", name: "", role: "cleaner" });
         fetchEmployees();
+      } catch (err) {
+        setError("Error al actualizar empleado: " + (err.message || err));
       }
     } else {
-      // Create user in Supabase Auth and in users table
-      const { data: signUpData, error: signUpError } = await supabase.auth.admin.createUser({
-        email: form.email,
-        password: Math.random().toString(36).slice(-8), // random password
-        email_confirm: true
-      });
-      if (signUpError) {
-        setError(signUpError.message);
-        return;
-      }
-      const { error: userError } = await supabase.from("users").insert([
-        {
-          id: signUpData.user.id,
-          email: form.email,
-          name: form.name,
-          role: form.role
-        }
-      ]);
-      if (userError) setError(userError.message);
-      else {
+      try {
+        await withRetry(async () => {
+          const { data: signUpData, error: signUpError } = await supabase.auth.admin.createUser({
+            email: form.email,
+            password: Math.random().toString(36).slice(-8),
+            email_confirm: true
+          });
+          if (signUpError) throw new Error(signUpError.message);
+          const { error: userError } = await supabase.from("users").insert([
+            {
+              id: signUpData.user.id,
+              email: form.email,
+              name: form.name,
+              role: form.role
+            }
+          ]);
+          if (userError) throw new Error(userError.message);
+        }, 10000, 3);
         setSuccessMsg("Empleado agregado exitosamente.");
         setForm({ email: "", name: "", role: "cleaner" });
         fetchEmployees();
+      } catch (err) {
+        setError("Error al agregar empleado: " + (err.message || err));
       }
     }
   }
 
-  if (loading) return <p className="text-center mt-8 text-lg">Loading...</p>;
+  if (loading) return <p className="text-center mt-8 text-lg">Cargando...</p>;
+  if (error) return <p className="text-center mt-8 text-lg text-red-600">Error: {error}</p>;
   if (!user || role !== "admin") return null;
 
   return (

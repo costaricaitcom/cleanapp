@@ -7,8 +7,8 @@ export async function withRetry<T>(fn: () => Promise<T>, timeoutMs = 10000, maxA
     } catch (err) {
       lastError = err;
       if (attempt < maxAttempts) {
-        // Optionally, add a small delay between retries
-        await new Promise(res => setTimeout(res, 400));
+        // Espera 1.5 segundos entre reintentos
+        await new Promise(res => setTimeout(res, 1500));
       }
     }
   }

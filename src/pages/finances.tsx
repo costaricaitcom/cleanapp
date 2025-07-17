@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useRouter } from "next/router";
 import { supabase } from "../lib/supabaseClient";
+import { withRetry } from '../utils/withRetry';
 
 export default function Finances() {
   const auth = useAuth();
@@ -37,54 +38,71 @@ export default function Finances() {
 
   async function fetchData() {
     setLoadingData(true);
-    let revQuery = supabase.from("revenues").select("*");
-    let expQuery = supabase.from("expenses").select("*");
-    if (role === "owner") {
-      revQuery = revQuery.eq("owner_id", user.id);
-      expQuery = expQuery.eq("owner_id", user.id);
+    setError("");
+    try {
+      await withRetry(async () => {
+        let revQuery = supabase.from("revenues").select("*");
+        let expQuery = supabase.from("expenses").select("*");
+        if (role === "owner") {
+          revQuery = revQuery.eq("owner_id", user.id);
+          expQuery = expQuery.eq("owner_id", user.id);
+        }
+        const { data: revs, error: revErr } = await revQuery;
+        const { data: exps, error: expErr } = await expQuery;
+        if (revErr) throw new Error(revErr.message);
+        if (expErr) throw new Error(expErr.message);
+        setRevenues(revs || []);
+        setExpenses(exps || []);
+      }, 10000, 3);
+    } catch (err) {
+      setError("Error al cargar finanzas: " + (err.message || err));
+    } finally {
+      setLoadingData(false);
     }
-    const { data: revs } = await revQuery;
-    const { data: exps } = await expQuery;
-    setRevenues(revs || []);
-    setExpenses(exps || []);
-    setLoadingData(false);
   }
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    if (form.type === "revenue") {
-      const { error } = await supabase.from("revenues").insert([
-        {
-          property_id: form.property_id,
-          amount: Number(form.amount),
-          description: form.description,
-          date: form.date,
-          recorded_by: user.id,
-          owner_id: user.id
+    try {
+      await withRetry(async () => {
+        if (form.type === "revenue") {
+          const { error } = await supabase.from("revenues").insert([
+            {
+              property_id: form.property_id,
+              amount: Number(form.amount),
+              description: form.description,
+              date: form.date,
+              recorded_by: user.id,
+              owner_id: user.id
+            }
+          ]);
+          if (error) throw new Error(error.message);
+          fetchData();
+        } else {
+          const { error } = await supabase.from("expenses").insert([
+            {
+              property_id: form.property_id,
+              amount: Number(form.amount),
+              description: form.description,
+              type: "General",
+              date: form.date,
+              recorded_by: user.id,
+              owner_id: user.id
+            }
+          ]);
+          if (error) throw new Error(error.message);
+          fetchData();
         }
-      ]);
-      if (error) setError(error.message);
-      else fetchData();
-    } else {
-      const { error } = await supabase.from("expenses").insert([
-        {
-          property_id: form.property_id,
-          amount: Number(form.amount),
-          description: form.description,
-          type: "General",
-          date: form.date,
-          recorded_by: user.id,
-          owner_id: user.id
-        }
-      ]);
-      if (error) setError(error.message);
-      else fetchData();
+      }, 10000, 3);
+      setForm({ type: "revenue", property_id: "", amount: "", description: "", date: "" });
+    } catch (err) {
+      setError("Error al agregar registro financiero: " + (err.message || err));
     }
-    setForm({ type: "revenue", property_id: "", amount: "", description: "", date: "" });
   }
 
-  if (loading) return <p className="text-center mt-8 text-lg">Loading...</p>;
+  if (loading) return <p className="text-center mt-8 text-lg">Cargando...</p>;
+  if (error) return <p className="text-center mt-8 text-lg text-red-600">Error: {error}</p>;
   if (!user || (role !== "admin" && role !== "owner" && role !== "finance")) return null;
 
   return (

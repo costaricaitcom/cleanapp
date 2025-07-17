@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useRouter } from "next/router";
 import { supabase } from "../lib/supabaseClient";
+import { withRetry } from '../utils/withRetry';
 
 export default function Properties() {
   const auth = useAuth();
@@ -53,13 +54,22 @@ export default function Properties() {
 
   async function fetchProperties() {
     setLoadingData(true);
-    let query = supabase.from("properties").select("*");
-    if (role === "owner") {
-      query = query.eq("owner_id", user.id);
+    setError("");
+    try {
+      await withRetry(async () => {
+        let query = supabase.from("properties").select("*");
+        if (role === "owner") {
+          query = query.eq("owner_id", user.id);
+        }
+        const { data, error } = await query;
+        if (error) throw new Error(error.message);
+        setProperties(data || []);
+      }, 10000, 3);
+    } catch (err) {
+      setError("Error al cargar propiedades: " + (err.message || err));
+    } finally {
+      setLoadingData(false);
     }
-    const { data, error } = await query;
-    if (!error) setProperties(data || []);
-    setLoadingData(false);
   }
 
   async function handleAddOrUpdate(e: React.FormEvent) {
@@ -67,15 +77,16 @@ export default function Properties() {
     setError("");
     setSuccessMsg("");
     if (editingId) {
-      // Update property
-      const { error } = await supabase.from("properties").update({
-        ...form,
-        square_footage: Number(form.square_footage),
-        number_of_rooms: Number(form.number_of_rooms),
-        number_of_people: Number(form.number_of_people)
-      }).eq("id", editingId);
-      if (error) setError(error.message);
-      else {
+      try {
+        await withRetry(async () => {
+          const { error } = await supabase.from("properties").update({
+            ...form,
+            square_footage: Number(form.square_footage),
+            number_of_rooms: Number(form.number_of_rooms),
+            number_of_people: Number(form.number_of_people)
+          }).eq("id", editingId);
+          if (error) throw new Error(error.message);
+        }, 10000, 3);
         setSuccessMsg("Propiedad actualizada exitosamente.");
         setEditingId(null);
         setForm({
@@ -88,20 +99,23 @@ export default function Properties() {
           special_cleaning_requirements: ""
         });
         fetchProperties();
+      } catch (err) {
+        setError("Error al actualizar propiedad: " + (err.message || err));
       }
     } else {
-      // Insertar propiedad dejando que la base de datos genere el UUID automáticamente
-      const { data, error } = await supabase.from("properties").insert([
-        {
-          ...form,
-          owner_id: user.id,
-          square_footage: Number(form.square_footage),
-          number_of_rooms: Number(form.number_of_rooms),
-          number_of_people: Number(form.number_of_people)
-        }
-      ]);
-      if (error) setError(error.message);
-      else {
+      try {
+        await withRetry(async () => {
+          const { error } = await supabase.from("properties").insert([
+            {
+              ...form,
+              owner_id: user.id,
+              square_footage: Number(form.square_footage),
+              number_of_rooms: Number(form.number_of_rooms),
+              number_of_people: Number(form.number_of_people)
+            }
+          ]);
+          if (error) throw new Error(error.message);
+        }, 10000, 3);
         setSuccessMsg("Propiedad agregada exitosamente.");
         setForm({
           location: "",
@@ -113,11 +127,14 @@ export default function Properties() {
           special_cleaning_requirements: ""
         });
         fetchProperties();
+      } catch (err) {
+        setError("Error al agregar propiedad: " + (err.message || err));
       }
     }
   }
 
-  if (loading) return <p className="text-center mt-8 text-lg">Loading...</p>;
+  if (loading) return <p className="text-center mt-8 text-lg">Cargando...</p>;
+  if (error) return <p className="text-center mt-8 text-lg text-red-600">Error: {error}</p>;
   if (!user || (role !== "admin" && role !== "owner")) return null;
 
   return (

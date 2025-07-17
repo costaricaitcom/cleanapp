@@ -2,6 +2,10 @@ import React, { useEffect, useState, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useRouter } from "next/router";
 import { supabase } from "../lib/supabaseClient";
+import { DateRange } from 'react-date-range';
+import 'react-date-range/dist/styles.css';
+import 'react-date-range/dist/theme/default.css';
+import { withRetry } from '../utils/withRetry';
 
 export default function Tasks() {
   const auth = useAuth();
@@ -25,6 +29,13 @@ export default function Tasks() {
   const [error, setError] = useState("");
   const [cleaners, setCleaners] = useState<any[]>([]);
   const [cleaningManagers, setCleaningManagers] = useState<any[]>([]);
+  const [dateRange, setDateRange] = useState([
+    {
+      startDate: form.scheduled_date ? new Date(form.scheduled_date) : new Date(),
+      endDate: form.end_date ? new Date(form.end_date) : new Date(),
+      key: 'selection',
+    },
+  ]);
 
   useEffect(() => {
     if (!loading && (!user || !['admin', 'cleaning_manager', 'cleaner', 'owner'].includes(role))) {
@@ -33,13 +44,13 @@ export default function Tasks() {
   }, [user, role, loading, router]);
 
   useEffect(() => {
-    if (user && (role === "admin" || role === "cleaning_manager" || role === "cleaner" || role === "owner")) {
+    if (user && (role === "admin" || role === "cleaning_manager" || role === "owner")) {
       fetchTasks();
     }
     if (role === "cleaning_manager") {
       fetchCleaners();
     }
-    if (role === "owner") {
+    if (role === "admin" || role === "cleaning_manager" || role === "owner") {
       fetchCleaningManagers();
     }
     // eslint-disable-next-line
@@ -47,24 +58,47 @@ export default function Tasks() {
 
   async function fetchTasks() {
     setLoadingData(true);
-    let query = supabase.from("cleaning_tasks").select("*");
-    if (role === "cleaner") {
-      // Only show tasks assigned to this user
-      query = query.contains("assigned_to", [user.id]);
+    setError("");
+    try {
+      await withRetry(async () => {
+        let query = supabase.from("cleaning_tasks").select("*");
+        if (role === "cleaner") {
+          // Only show tasks assigned to this user
+          query = query.contains("assigned_to", [user.id]);
+        }
+        const { data, error } = await query;
+        if (error) throw new Error(error.message);
+        setTasks(data || []);
+      }, 10000, 3);
+    } catch (err) {
+      setError("Error al cargar tareas: " + (err.message || err));
+    } finally {
+      setLoadingData(false);
     }
-    const { data, error } = await query;
-    if (!error) setTasks(data || []);
-    setLoadingData(false);
   }
 
   async function fetchCleaners() {
-    const { data, error } = await supabase.from("users").select("id, name, email").eq("role", "cleaner");
-    if (!error) setCleaners(data || []);
+    try {
+      await withRetry(async () => {
+        const { data, error } = await supabase.from("users").select("id, name, email").eq("role", "cleaner");
+        if (error) throw new Error(error.message);
+        setCleaners(data || []);
+      }, 10000, 3);
+    } catch (err) {
+      setError("Error al cargar limpiadores: " + (err.message || err));
+    }
   }
 
   async function fetchCleaningManagers() {
-    const { data, error } = await supabase.from("users").select("id, name, email").eq("role", "cleaning_manager");
-    if (!error) setCleaningManagers(data || []);
+    try {
+      await withRetry(async () => {
+        const { data, error } = await supabase.from("users").select("id, name, email").eq("role", "cleaning_manager");
+        if (error) throw new Error(error.message);
+        setCleaningManagers(data || []);
+      }, 10000, 3);
+    } catch (err) {
+      setError("Error al cargar jefes de limpieza: " + (err.message || err));
+    }
   }
 
   async function handleAdd(e: React.FormEvent) {
@@ -84,27 +118,31 @@ export default function Tasks() {
     } else if (role === "cleaner") {
       assignedTo = [user.id];
     }
-    const { data, error } = await supabase.from("cleaning_tasks").insert([
-      {
-        ...form,
-        duration_days: Number(form.duration_days),
-        assigned_to: assignedTo,
-        owner_id: user.id
-      }
-    ]);
-    if (error) setError(error.message);
-    else {
-      setForm({
-        property_id: "",
-        service_type: "",
-        scheduled_date: "",
-        end_date: "",
-        status: "pending",
-        duration_days: "",
-        notes: "",
-        assigned_to: user ? [user.id] : []
-      });
-      fetchTasks();
+    try {
+      await withRetry(async () => {
+        const { data, error } = await supabase.from("cleaning_tasks").insert([
+          {
+            ...form,
+            duration_days: Number(form.duration_days),
+            assigned_to: assignedTo,
+            owner_id: user.id
+          }
+        ]);
+        if (error) throw new Error(error.message);
+        setForm({
+          property_id: "",
+          service_type: "",
+          scheduled_date: "",
+          end_date: "",
+          status: "pending",
+          duration_days: "",
+          notes: "",
+          assigned_to: user ? [user.id] : []
+        });
+        fetchTasks();
+      }, 10000, 3);
+    } catch (err) {
+      setError("Error al agregar tarea: " + (err.message || err));
     }
   }
 
@@ -115,6 +153,7 @@ export default function Tasks() {
   }, [role, cleaningManagers]);
 
   if (loading) return <p className="text-center mt-8 text-lg">Cargando...</p>;
+  if (error) return <p className="text-center mt-8 text-lg text-red-600">Error: {error}</p>;
   if (!user || (!['admin', 'cleaning_manager', 'cleaner', 'owner'].includes(role))) return null;
 
   return (
@@ -134,14 +173,23 @@ export default function Tasks() {
             <input className="input input-bordered p-2 rounded-2xl border w-full" placeholder="Notas" value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} />
           </div>
           <div className="flex flex-col w-full sm:col-span-2 lg:col-span-3 items-center gap-4">
-            <div className="flex flex-col w-full">
-              <label className="text-xs text-white mb-1 text-center">Check-In (Fecha de inicio)</label>
-              <input className="input input-bordered p-2 rounded-2xl border w-full" placeholder="Check-In" type="date" value={form.scheduled_date} onChange={e => setForm(f => ({ ...f, scheduled_date: e.target.value }))} required />
-            </div>
-            <div className="flex flex-col w-full">
-              <label className="text-xs text-white mb-1 text-center">Check-Out (Fecha de salida)</label>
-              <input className="input input-bordered p-2 rounded-2xl border w-full" placeholder="Check-Out" type="date" value={form.end_date} onChange={e => setForm(f => ({ ...f, end_date: e.target.value }))} />
-            </div>
+            <label className="text-xs text-white mb-1 text-center">Selecciona el rango de fechas</label>
+            <DateRange
+              editableDateInputs={true}
+              onChange={item => {
+                setDateRange([item.selection]);
+                setForm(f => ({
+                  ...f,
+                  scheduled_date: item.selection.startDate.toISOString().split('T')[0],
+                  end_date: item.selection.endDate.toISOString().split('T')[0],
+                }));
+              }}
+              moveRangeOnFirstSelection={false}
+              ranges={dateRange}
+              minDate={new Date()}
+              rangeColors={["#2563eb"]}
+              locale={undefined}
+            />
           </div>
           {/* Dropdowns for assignee, button, and error message remain as before, but centered and full width */}
           {role === "cleaning_manager" && (
