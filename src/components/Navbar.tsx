@@ -26,6 +26,7 @@ export default function Navbar() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     router.push("/login");
+    window.location.reload(); // Forzar recarga para limpiar el estado
   };
 
   // Allow changing role for any authenticated user
