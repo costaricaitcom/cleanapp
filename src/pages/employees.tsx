@@ -22,6 +22,11 @@ export default function Employees() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState("");
 
+  // Format UUID to show only first 8 characters
+  const formatUUID = (uuid: string) => {
+    return uuid ? uuid.substring(0, 8) : '';
+  };
+
   useEffect(() => {
     if (!loading && (!user || role !== "admin")) {
       router.push("/dashboard");
@@ -100,7 +105,7 @@ export default function Employees() {
   }
 
   if (loading) return <p className="text-center mt-8 text-lg">Cargando...</p>;
-  if (error) return <p className="text-center mt-8 text-lg text-red-600">Error: {error}</p>;
+  if (error) return <div className="text-center mt-8 text-lg text-red-600">Error: {error}<br /><button className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-2xl" onClick={fetchEmployees}>Reintentar</button></div>;
   if (!user || role !== "admin") return null;
 
   return (
@@ -123,19 +128,17 @@ export default function Employees() {
       {loadingData ? <p className="text-center">Cargando...</p> : (
         <div className="overflow-x-auto">
           <table className="min-w-full bg-white rounded-2xl shadow">
-            <thead>
-              <tr className="bg-gradient-to-r from-[#23232a] to-[#40233a] text-white font-bold rounded-t-2xl shadow border-l-4 border-pink-600">
-                <th className="py-2 px-3">ID</th>
-                <th className="py-2 px-3">Correo electrónico</th>
-                <th className="py-2 px-3 flex items-center gap-1">👤 <span>Nombre</span></th>
-                <th className="py-2 px-3">Rol</th>
-                <th className="py-2 px-3">Acciones</th>
-              </tr>
-            </thead>
+                          <thead>
+                <tr className="bg-gradient-to-r from-[#23232a] to-[#40233a] text-white font-bold rounded-t-2xl shadow border-l-4 border-pink-600">
+                  <th className="py-2 px-3">Correo electrónico</th>
+                  <th className="py-2 px-3">Nombre</th>
+                  <th className="py-2 px-3">Rol</th>
+                  <th className="py-2 px-3">Acciones</th>
+                </tr>
+              </thead>
             <tbody>
               {employees.map((e) => (
                 <tr key={e.id} className="border-b hover:bg-pink-900/30 transition-all duration-200">
-                  <td className="py-2 px-3 text-xs break-all">{e.id}</td>
                   <td className="py-2 px-3">{e.email}</td>
                   <td className="py-2 px-3">{e.name}</td>
                   <td className="py-2 px-3">{e.role}</td>

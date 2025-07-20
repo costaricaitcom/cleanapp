@@ -50,8 +50,9 @@ export default function Navbar() {
         {user && (effectiveRole === "admin" || effectiveRole === "owner") && <Link href="/properties" className={`text-white !text-white hover:text-white transition no-underline${router.pathname === '/properties' ? ' font-bold' : ''}`}>Propiedades</Link>}
         {user && <Link href="/tasks" className={`text-white !text-white hover:text-white transition no-underline${router.pathname === '/tasks' ? ' font-bold' : ''}`}>Tareas</Link>}
         {user && <Link href="/calendar" className={`text-white !text-white hover:text-white transition no-underline${router.pathname === '/calendar' ? ' font-bold' : ''}`}>Calendario</Link>}
-        {user && (effectiveRole === "admin" || effectiveRole === "owner" || effectiveRole === "finance") && <Link href="/finances" className={`text-white !text-white hover:text-white transition no-underline${router.pathname === '/finances' ? ' font-bold' : ''}`}>Finanzas</Link>}
+        {user && (effectiveRole === "admin" || effectiveRole === "finance") && <Link href="/finances" className={`text-white !text-white hover:text-white transition no-underline${router.pathname === '/finances' ? ' font-bold' : ''}`}>Finanzas</Link>}
         {user && effectiveRole === "admin" && <Link href="/employees" className={`text-white !text-white hover:text-white transition no-underline${router.pathname === '/employees' ? ' font-bold' : ''}`}>Empleados</Link>}
+        {user && effectiveRole === "admin" && <Link href="/user-management" className={`text-white !text-white hover:text-white transition no-underline${router.pathname === '/user-management' ? ' font-bold' : ''}`}>Gestión de Usuarios</Link>}
         <div className="flex-1" />
         {!user && <Link href="/login" className={`text-white !text-white hover:text-white transition no-underline${router.pathname === '/login' ? ' font-bold' : ''}`}>Iniciar sesión</Link>}
         {!user && <Link href="/register" className={`text-white !text-white hover:text-white transition no-underline${router.pathname === '/register' ? ' font-bold' : ''}`}>Registrarse</Link>}

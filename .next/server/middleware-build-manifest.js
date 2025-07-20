@@ -25,20 +25,15 @@ globalThis.__BUILD_MANIFEST = {
       "static/chunks/main.js",
       "static/chunks/pages/calendar.js"
     ],
-    "/dashboard": [
+    "/finances": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/dashboard.js"
+      "static/chunks/pages/finances.js"
     ],
-    "/properties": [
+    "/user-management": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/properties.js"
-    ],
-    "/tasks": [
-      "static/chunks/webpack.js",
-      "static/chunks/main.js",
-      "static/chunks/pages/tasks.js"
+      "static/chunks/pages/user-management.js"
     ]
   },
   "ampFirstPages": []

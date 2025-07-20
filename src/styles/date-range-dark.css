@@ -16,19 +16,21 @@
 .rdrDayStartPreview, .rdrDayEndPreview {
   background: #60a5fa !important;
   color: #fff !important;
-  border-radius: 50% !important;
-  border: 2px solid #fff !important;
+  border-radius: 0 !important;
+  border: none !important;
 }
 .rdrDayStartEdge, .rdrDayEndEdge {
   background: #60a5fa !important;
   color: #fff !important;
-  border-radius: 50% !important;
-  border: 2px solid #fff !important;
+  border-radius: 0 !important;
+  border: none !important;
   z-index: 2;
 }
 .rdrDayHovered:not(.rdrDaySelected):not(.rdrDayInRange) {
   background: #60a5fa !important;
   color: #fff !important;
+  border-radius: 0 !important;
+  border: none !important;
 }
 .rdrDayDisabled, .rdrDayDisabled span {
   color: #555 !important;

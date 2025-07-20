@@ -58,8 +58,8 @@ export default function Dashboard() {
   return (
     <div className="max-w-4xl mx-auto p-4">
       <div className="flex items-center gap-4 bg-white bg-opacity-5 rounded-lg p-4 mb-6 shadow" style={{ border: '1px solid #23232a' }}>
-        <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#23232a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32, color: '#fff', fontWeight: 300 }}>
-          <span role="img" aria-label="profile">👤</span>
+        <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#23232a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, color: '#fff', fontWeight: 300 }}>
+          <span>U</span>
         </div>
         <div>
           <div className="text-lg font-semibold text-white">{user.email}</div>

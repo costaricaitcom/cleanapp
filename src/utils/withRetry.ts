@@ -6,19 +6,32 @@ export async function withRetry<T>(fn: () => Promise<T>, timeoutMs = 10000, maxA
       return await withTimeout(fn(), timeoutMs);
     } catch (err) {
       lastError = err;
+      console.log(`Attempt ${attempt} failed:`, err.message);
+      
       if (attempt < maxAttempts) {
-        // Espera 1.5 segundos entre reintentos
-        await new Promise(res => setTimeout(res, 1500));
+        // Exponential backoff: wait longer between retries
+        const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
+        console.log(`Retrying in ${delay}ms...`);
+        await new Promise(res => setTimeout(res, delay));
       }
     }
   }
-  throw lastError || new Error('Error desconocido');
+  
+  // Provide more specific error messages
+  if (lastError?.message?.includes('Tiempo de espera agotado')) {
+    throw new Error(`Operación cancelada después de ${maxAttempts} intentos. Verifique su conexión a internet.`);
+  }
+  
+  throw lastError || new Error('Error desconocido después de múltiples intentos');
 }
 
 // Helper: timeout wrapper
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('Tiempo de espera agotado')), ms);
+    const timer = setTimeout(() => {
+      reject(new Error('Tiempo de espera agotado'));
+    }, ms);
+    
     promise
       .then((res) => {
         clearTimeout(timer);
