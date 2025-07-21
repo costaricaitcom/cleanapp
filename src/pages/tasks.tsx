@@ -337,6 +337,9 @@ export default function Tasks() {
           )}
           
           {role === "owner" && (
+            (() => { console.log('cleaningManagers:', cleaningManagers, 'role:', role); return null; })()
+          )}
+          {role === "owner" && (
             <div className="flex flex-col w-full">
               <label className="text-xs text-white mb-1 text-center">Asignar a Jefe de Limpieza</label>
               <select
