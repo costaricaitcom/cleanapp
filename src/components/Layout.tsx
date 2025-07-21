@@ -32,10 +32,10 @@ const TABLES = [
   { name: 'expenses', label: 'Gasto', labelPlural: 'Gastos' },
 ];
 
-type NotifType = 'info' | 'warning' | 'error' | 'success';
+type NotificationType = "info" | "warning" | "error" | "success";
 interface Notif {
   show: boolean;
-  type: NotifType;
+  type: NotificationType;
   message: string;
 }
 interface FeedItem {
@@ -46,7 +46,7 @@ interface FeedItem {
 function getEventMessage(table: string, eventType: string, payload: any): { notif: Notif; feed: FeedItem } | null {
   const tableInfo = TABLES.find(t => t.name === table);
   const label = tableInfo ? tableInfo.label : table;
-  let notifType: NotifType = 'info';
+  let notifType: NotificationType = 'info';
   if (eventType === 'DELETE') notifType = 'warning';
   else if (eventType === 'INSERT' || eventType === 'UPDATE') notifType = 'info';
   // Only allow valid event types
@@ -64,7 +64,11 @@ function getEventMessage(table: string, eventType: string, payload: any): { noti
 }
 
 export default function Layout({ children }) {
-  const [notification, setNotification] = useState({ show: false, type: 'info', message: '' });
+  const [notification, setNotification] = useState<{
+    show: boolean;
+    type: NotificationType;
+    message: string;
+  }>({ show: false, type: 'info', message: '' });
   const [activityFeed, setActivityFeed] = useState([]);
   const [showFeed, setShowFeed] = useState(false);
 
