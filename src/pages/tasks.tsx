@@ -11,6 +11,7 @@ import Pagination from "../components/Pagination";
 import Tooltip from "../components/Tooltip";
 import { withRetry } from '../utils/withRetry';
 import { generateUUID } from '../utils/uuid';
+import { TaskForm, taskInitialState } from '../schema/task';
 
 export default function Tasks() {
   const auth = useAuth();
@@ -22,16 +23,7 @@ export default function Tasks() {
   const [tasks, setTasks] = useState<any[]>([]);
   const [filteredTasks, setFilteredTasks] = useState<any[]>([]);
   const [loadingData, setLoadingData] = useState(true);
-  const [form, setForm] = useState({
-    property_id: "",
-    service_type: "",
-    scheduled_date: "",
-    end_date: "",
-    status: "pending",
-    duration_days: "",
-    notes: "",
-    assigned_to: user ? [user.id] : []
-  });
+  const [form, setForm] = useState<TaskForm>({ ...taskInitialState, assigned_to: user ? [user.id] : [] });
   const [error, setError] = useState("");
   const [cleaners, setCleaners] = useState<any[]>([]);
   const [cleaningManagers, setCleaningManagers] = useState<any[]>([]);
@@ -223,16 +215,7 @@ export default function Tasks() {
           }
         ]);
         if (error) throw new Error(error.message);
-        setForm({
-          property_id: "",
-          service_type: "",
-          scheduled_date: "",
-          end_date: "",
-          status: "pending",
-          duration_days: "",
-          notes: "",
-          assigned_to: user ? [user.id] : []
-        });
+        setForm({ ...taskInitialState, assigned_to: user ? [user.id] : [] });
         fetchTasks();
         showNotification('success', 'Tarea agregada exitosamente');
       }, 5000, 3);

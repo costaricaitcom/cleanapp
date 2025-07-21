@@ -10,6 +10,7 @@ import Pagination from "../components/Pagination";
 import Tooltip from "../components/Tooltip";
 import { withRetry } from '../utils/withRetry';
 import { generateUUID } from '../utils/uuid';
+import { PropertyForm, propertyInitialState } from '../schema/property';
 
 export default function Properties() {
   const auth = useAuth();
@@ -21,15 +22,7 @@ export default function Properties() {
   const [properties, setProperties] = useState<any[]>([]);
   const [filteredProperties, setFilteredProperties] = useState<any[]>([]);
   const [loadingData, setLoadingData] = useState(true);
-  const [form, setForm] = useState({
-    location: "",
-    province: "",
-    canton: "",
-    square_footage: "",
-    number_of_rooms: "",
-    number_of_people: "",
-    special_cleaning_requirements: ""
-  });
+  const [form, setForm] = useState<PropertyForm>({ ...propertyInitialState });
   const [error, setError] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState("");
@@ -132,15 +125,7 @@ export default function Properties() {
         setSuccessMsg("Propiedad actualizada exitosamente.");
         showNotification('success', 'Propiedad actualizada exitosamente');
         setEditingId(null);
-        setForm({
-          location: "",
-          province: "",
-          canton: "",
-          square_footage: "",
-          number_of_rooms: "",
-          number_of_people: "",
-          special_cleaning_requirements: ""
-        });
+        setForm({ ...propertyInitialState });
         fetchProperties();
       } catch (err) {
         setError("Error al actualizar propiedad: " + (err.message || err));
@@ -163,15 +148,7 @@ export default function Properties() {
         }, 5000, 3);
         setSuccessMsg("Propiedad agregada exitosamente.");
         showNotification('success', 'Propiedad agregada exitosamente');
-        setForm({
-          location: "",
-          province: "",
-          canton: "",
-          square_footage: "",
-          number_of_rooms: "",
-          number_of_people: "",
-          special_cleaning_requirements: ""
-        });
+        setForm({ ...propertyInitialState });
         fetchProperties();
       } catch (err) {
         setError("Error al agregar propiedad: " + (err.message || err));
@@ -367,15 +344,7 @@ export default function Properties() {
                 type="button"
                 onClick={() => {
                   setEditingId(null);
-                  setForm({
-                    location: "",
-                    province: "",
-                    canton: "",
-                    square_footage: "",
-                    number_of_rooms: "",
-                    number_of_people: "",
-                    special_cleaning_requirements: ""
-                  });
+                  setForm({ ...propertyInitialState });
                   setSelectedProvincia("");
                   setSelectedCanton("");
                 }}
